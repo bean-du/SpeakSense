@@ -1,0 +1,9 @@
+[target.x86_64-unknown-linux-gnu]
+image = "nvidia/cuda:12.1.0-devel-ubuntu22.04"
+
+[build.env]
+passthrough = [
+    "CUDA_PATH",
+    "CUDA_HOME",
+    "CUDACXX",
+] 

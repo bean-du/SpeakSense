@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1600" height="1000" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+        <!-- 定义渐变 -->
+        <linearGradient id="mainGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" style="stop-color:#4158D0"/>
+            <stop offset="50%" style="stop-color:#C850C0"/>
+            <stop offset="100%" style="stop-color:#FFCC70"/>
+        </linearGradient>
+        
+        <!-- 定义发光效果 -->
+        <filter id="glow">
+            <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+            <feMerge>
+                <feMergeNode in="coloredBlur"/>
+                <feMergeNode in="SourceGraphic"/>
+            </feMerge>
+        </filter>
+
+        <!-- 定义连接线动画 -->
+        <path id="curve" d="M0,0 Q100,0 100,100" fill="none"/>
+    </defs>
+
+    <style>
+        .node {
+            fill: rgba(255, 255, 255, 0.9);
+            stroke: url(#mainGrad);
+            stroke-width: 2;
+            filter: url(#glow);
+            rx: 15;
+            ry: 15;
+        }
+        .main-node {
+            fill: url(#mainGrad);
+            stroke: none;
+        }
+        .title {
+            font-family: 'Arial', sans-serif;
+            font-size: 24px;
+            font-weight: bold;
+            fill: white;
+        }
+        .sub-title {
+            font-family: 'Arial', sans-serif;
+            font-size: 18px;
+            font-weight: bold;
+            fill: #333;
+        }
+        .text {
+            font-family: 'Arial', sans-serif;
+            font-size: 14px;
+            fill: #666;
+        }
+        .connection {
+            stroke: url(#mainGrad);
+            stroke-width: 2;
+            stroke-dasharray: 5,5;
+            animation: dash 20s linear infinite;
+        }
+        @keyframes dash {
+            to {
+                stroke-dashoffset: 1000;
+            }
+        }
+    </style>
+
+    <!-- 中心节点 -->
+    <g transform="translate(800,500)">
+        <rect x="-100" y="-40" width="200" height="80" class="node main-node"/>
+        <text x="0" y="10" class="title" text-anchor="middle">AI语音服务</text>
+    </g>
+
+    <!-- 语音识别模块 -->
+    <g transform="translate(500,300)">
+        <rect x="-120" y="-100" width="240" height="200" class="node"/>
+        <text x="0" y="-70" class="sub-title" text-anchor="middle">语音识别</text>
+        <text x="-100" y="-40" class="text">• Whisper模型</text>
+        <text x="-100" y="-10" class="text">• 多语言支持</text>
+        <text x="-100" y="20" class="text">• 实时转写</text>
+        <text x="-100" y="50" class="text">• 降噪处理</text>
+    </g>
+
+    <!-- 说话人分离模块 -->
+    <g transform="translate(1100,300)">
+        <rect x="-120" y="-100" width="240" height="200" class="node"/>
+        <text x="0" y="-70" class="sub-title" text-anchor="middle">说话人分离</text>
+        <text x="-100" y="-40" class="text">• 多人对话识别</text>
+        <text x="-100" y="-10" class="text">• 说话人切换检测</text>
+        <text x="-100" y="20" class="text">• 时间戳标记</text>
+        <text x="-100" y="50" class="text">• 声纹识别</text>
+    </g>
+
+    <!-- 情感分析模块 -->
+    <g transform="translate(500,700)">
+        <rect x="-120" y="-100" width="240" height="200" class="node"/>
+        <text x="0" y="-70" class="sub-title" text-anchor="middle">情感分析</text>
+        <text x="-100" y="-40" class="text">• 情绪识别</text>
+        <text x="-100" y="-10" class="text">• 语气分析</text>
+        <text x="-100" y="20" class="text">• 语调识别</text>
+        <text x="-100" y="50" class="text">• 情感标签</text>
+    </g>
+
+    <!-- 文本处理模块 -->
+    <g transform="translate(1100,700)">
+        <rect x="-120" y="-100" width="240" height="200" class="node"/>
+        <text x="0" y="-70" class="sub-title" text-anchor="middle">文本处理</text>
+        <text x="-100" y="-40" class="text">• 脏词过滤</text>
+        <text x="-100" y="-10" class="text">• 文本分段</text>
+        <text x="-100" y="20" class="text">• 标点优化</text>
+        <text x="-100" y="50" class="text">• 格式化输出</text>
+    </g>
+
+    <!-- 连接线 -->
+    <path d="M 800,460 L 800,540" class="connection"/>
+    <path d="M 800,500 L 620,300" class="connection"/>
+    <path d="M 800,500 L 980,300" class="connection"/>
+    <path d="M 800,500 L 620,700" class="connection"/>
+    <path d="M 800,500 L 980,700" class="connection"/>
+
+    <!-- 添加动态效果的圆点 -->
+    <circle cx="800" cy="500" r="5" fill="white">
+        <animate attributeName="r" values="5;8;5" dur="2s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values="1;0.5;1" dur="2s" repeatCount="indefinite"/>
+    </circle>
+</svg>

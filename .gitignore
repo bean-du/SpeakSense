@@ -1,0 +1,6 @@
+/target
+/asr_data
+/logs
+/models
+/test
+/whisper_params.md

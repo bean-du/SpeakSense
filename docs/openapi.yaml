@@ -1,0 +1,424 @@
+openapi: 3.1.0
+info:
+  title: ASR Service API
+  description: API for Audio Speech Recognition Service
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:7200
+    description: Local development server
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: Authorization
+
+  schemas:
+    Permission:
+      type: string
+      enum:
+        - Transcribe
+        - SpeakerDiarization
+        - Admin
+      description: Available permissions for API keys
+
+    RateLimit:
+      type: object
+      required:
+        - requests_per_minute
+        - requests_per_hour
+        - requests_per_day
+      properties:
+        requests_per_minute:
+          type: integer
+          description: Maximum requests per minute
+        requests_per_hour:
+          type: integer
+          description: Maximum requests per hour
+        requests_per_day:
+          type: integer
+          description: Maximum requests per day
+
+    CreateApiKeyRequest:
+      type: object
+      required:
+        - name
+        - permissions
+        - rate_limit
+      properties:
+        name:
+          type: string
+          description: Name of the API key
+        permissions:
+          type: array
+          items:
+            $ref: '#/components/schemas/Permission'
+        rate_limit:
+          $ref: '#/components/schemas/RateLimit'
+        expires_in_days:
+          type: integer
+          nullable: true
+          description: Number of days until expiration
+
+    ApiKeyInfo:
+      type: object
+      properties:
+        key:
+          type: string
+        name:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        expires_at:
+          type: string
+          format: date-time
+          nullable: true
+        permissions:
+          type: array
+          items:
+            $ref: '#/components/schemas/Permission'
+        rate_limit:
+          $ref: '#/components/schemas/RateLimit'
+        status:
+          type: string
+          enum: [Active, Suspended, Expired]
+
+    ApiKeyStats:
+      type: object
+      properties:
+        total_requests:
+          type: integer
+        requests_today:
+          type: integer
+        last_used_at:
+          type: string
+          format: date-time
+        requests_per_day:
+          type: object
+          additionalProperties:
+            type: integer
+
+    ApiKeyUsageReport:
+      type: object
+      properties:
+        key_info:
+          $ref: '#/components/schemas/ApiKeyInfo'
+        stats:
+          $ref: '#/components/schemas/ApiKeyStats'
+        usage_summary:
+          type: object
+          properties:
+            average_daily_requests:
+              type: number
+              format: float
+            peak_daily_requests:
+              type: integer
+            days_until_expiry:
+              type: integer
+
+    TranscribeRequest:
+      type: object
+      required:
+        - audio_url
+        - callback_url
+      properties:
+        audio_url:
+          type: string
+          description: URL of the audio file
+        callback_url:
+          type: string
+          description: Callback URL for results
+        language:
+          type: string
+          nullable: true
+        speaker_diarization:
+          type: boolean
+          default: false
+        emotion_recognition:
+          type: boolean
+          default: false
+        filter_dirty_words:
+          type: boolean
+          default: false
+
+    TaskType:
+      type: string
+      enum: [Transcribe]
+
+    CallbackType:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: [Http]
+        url:
+          type: string
+          format: uri
+
+    TaskPriority:
+      type: string
+      enum: [High, Normal, Low]
+
+    TaskConfig:
+      type: object
+      required:
+        - task_type
+        - input_path
+        - callback_type
+        - params
+        - priority
+      properties:
+        task_type:
+          $ref: '#/components/schemas/TaskType'
+        input_path:
+          type: string
+        callback_type:
+          $ref: '#/components/schemas/CallbackType'
+        params:
+          type: object
+          properties:
+            language:
+              type: string
+              nullable: true
+            speaker_diarization:
+              type: boolean
+            emotion_recognition:
+              type: boolean
+            filter_dirty_words:
+              type: boolean
+        priority:
+          $ref: '#/components/schemas/TaskPriority'
+        retry_count:
+          type: integer
+          default: 0
+        max_retries:
+          type: integer
+          default: 3
+        timeout:
+          type: integer
+          nullable: true
+
+    ApiResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          nullable: true
+        error:
+          type: string
+          nullable: true
+
+paths:
+  /auth/api-keys:
+    post:
+      summary: Create new API key
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateApiKeyRequest'
+      responses:
+        '201':
+          description: API key created successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          key_info:
+                            $ref: '#/components/schemas/ApiKeyInfo'
+
+  /auth/api-keys/{api_key}:
+    delete:
+      summary: Revoke API key
+      parameters:
+        - name: api_key
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: API key revoked successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /auth/api-keys/{api_key}/stats:
+    get:
+      summary: Get API key statistics
+      parameters:
+        - name: api_key
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Statistics retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/ApiKeyStats'
+
+  /auth/api-keys/{api_key}/usage:
+    get:
+      summary: Get API key usage report
+      parameters:
+        - name: api_key
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Usage report retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/ApiKeyUsageReport'
+
+  /asr/transcribe:
+    post:
+      summary: Create transcription task
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TranscribeRequest'
+      responses:
+        '200':
+          description: Task created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /schedule/tasks:
+    post:
+      summary: Create task
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskConfig'
+      responses:
+        '201':
+          description: Task created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /schedule/tasks/{task_id}:
+    get:
+      summary: Get task details
+      parameters:
+        - name: task_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Task details retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /schedule/tasks/{task_id}/status:
+    get:
+      summary: Get task status
+      parameters:
+        - name: task_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Task status retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /schedule/tasks/{task_id}/priority:
+    post:
+      summary: Update task priority
+      parameters:
+        - name: task_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - priority
+              properties:
+                priority:
+                  $ref: '#/components/schemas/TaskPriority'
+      responses:
+        '200':
+          description: Task priority updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /schedule/tasks/stats:
+    get:
+      summary: Get task statistics
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: page_size
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        '200':
+          description: Task statistics retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'

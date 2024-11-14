@@ -1,0 +1,109 @@
+[package]
+name = "asr-rs"
+version = "0.1.0"
+edition = "2021"
+build = "build.rs"
+
+[profile.release]
+lto = true
+codegen-units = 64
+opt-level = 3
+strip = true
+
+[target.x86_64-unknown-linux-musl]
+rustflags = ["-C", "target-feature=+crt-static"]
+
+
+[features]
+default = ["server", "client"]
+server = []
+client = []
+metal = ["whisper-rs/metal"]
+cuda = ["whisper-rs/cuda"]
+
+[dependencies]
+clap = { version = "4.4", features = ["derive"] }
+hound = "3.5.1"
+whisper-rs = { version = "0.11.1", default-features = false }
+rubato = "0.16.0"
+realfft = "3.4.0"
+anyhow = "1.0.91"
+async-trait = "0.1.83"
+once_cell = "1.20.2"
+uuid = { version = "1.7", features = ["v4"] }
+chrono = { version = "0.4.38", features = ["serde"] }  # 添加 serde 特性
+regex = "1.10.2"
+
+
+serde = { version = "1.0.202", features = ["derive"] }
+serde_json = "1.0.117"
+
+futures-util = "0.3"
+
+
+# tracing
+tracing = "0.1.40"
+tracing-appender = "0.2.3"
+tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
+tempfile = "3.2"
+
+# fft
+rustfft = "6.1.0"
+
+# runtime and web
+tokio = { version = "1.41.0", features = ["full"] }
+axum = { version = "0.7.7", features = ["macros"] }
+governor = { version = "0.7", features = ["std", "jitter"] }
+reqwest = { version = "0.12.9", default-features = false, features = ["rustls-tls", "json"] }
+
+
+# parallel 
+rayon = "1.10.0"
+ndarray = "0.16.1"
+
+# database
+sqlx = { version = "0.8.2", default-features = false, features = ["runtime-tokio-rustls", "sqlite", "chrono"] }
+
+# sea-orm
+sea-orm = { version = "1.1.0", features = ["sqlx-sqlite", "runtime-tokio-rustls", "macros"] }
+sea-query = "0.32.0"
+dotenv = "0.15.0"
+
+# gRPC
+tonic = "0.12.3"
+prost = "0.13.3"
+tokio-stream = "0.1.16"
+base64 = "0.22.1"
+etcd-client = "0.14.0"
+local-ip-address = "0.6.3"
+tower-service = "0.3.3"
+bytes = "1.8.0"
+http = "1.1.0"
+http-body-util = "0.1.2"
+tower = "0.5.1"
+
+
+thiserror = "2.0.3"
+
+# 音频处理
+symphonia = { version = "0.5.3", features = ["mp3", "wav", "aac", "alac", "vorbis"] }
+futures = "0.3.31"
+rand = "0.8.5"
+
+[dev-dependencies]
+tempfile = "3.2"
+uuid = { version = "1.0", features = ["v4"] }
+async-stream = "0.3"
+
+[build-dependencies]
+tonic-build = { version = "0.12.3", features = ["prost"] }
+
+clap = { version = "4.4", features = ["derive"] }
+async-stream = "0.3"
+
+
+
+[[example]]
+name = "asr_client"
+path = "examples/asr_client.rs"
+

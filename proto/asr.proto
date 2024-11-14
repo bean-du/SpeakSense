@@ -1,0 +1,37 @@
+syntax = "proto3";
+package asr;
+
+option go_package = "github.com/intelliVoice/proto/asr";
+
+service Asr {
+  rpc Transcribe(stream TranscribeRequest) returns (stream TranscribeResponse) {}
+}
+
+enum AudioFormat {
+  AAC = 0;
+  MP3 = 1;
+  WAV = 2;
+  OGG = 3;
+  FLAC = 4;
+  AMR = 5;
+  OPUS = 6;
+  PCM = 7;
+  UNKNOWN = 8;
+}
+
+message TranscribeRequest {
+  // audio format
+  AudioFormat type = 1;
+  // audio is end
+  int32 end = 2;
+  // audio in base64
+  bytes audio = 3;
+  // deviceId
+  string device_id = 4;
+}
+
+message TranscribeResponse {
+  int32 end = 1;
+  bytes text = 2;
+  string device_id = 3;
+}

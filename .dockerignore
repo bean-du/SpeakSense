@@ -1,0 +1,7 @@
+*
+!target/*/release/asr-rs
+Dockerfile
+.git/
+.gitignore
+.env
+*.md 

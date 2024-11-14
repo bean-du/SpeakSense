@@ -1,0 +1,23 @@
+FROM nvidia/cuda:12.1.0-base-ubuntu22.04
+
+RUN apt-get update && apt-get install -y \
+    ffmpeg \
+    ca-certificates \
+    tzdata \
+    cuda-toolkit-12-1 \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN useradd -m -u 1000 app
+
+RUN mkdir -p /app/data /app/config /app/asr/data \
+    && chown -R app:app /app
+
+WORKDIR /app
+
+COPY --chown=app:app target/x86_64-unknown-linux-musl/release/asr-rs /app/
+
+ENV RUST_LOG=info
+
+USER app
+
+CMD ["/app/asr-rs"] 
