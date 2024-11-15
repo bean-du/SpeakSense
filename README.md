@@ -1,4 +1,4 @@
-# Whisper ASR Server
+# SpeakSense ASR Server
 
 A high-performance ASR (Automatic Speech Recognition) server implementation using Whisper, supporting both gRPC and REST APIs.
 
@@ -81,6 +81,59 @@ First, set the Metal resources path:
 export GGML_METAL_PATH_RESOURCES="./resources"
 cargo run --release --features metal
 ```
+
+### Docker Compose Quick Start
+> docker Only support linux cuda x86_64 now
+The easiest way to get started is using Docker Compose:
+
+1. Create required directories:
+```bash
+mkdir -p models asr_data/audio asr_data/database
+```
+
+2. Download the Whisper model:
+```bash
+./script/download-ggml-model.sh
+```
+
+3. Start the server:
+```bash
+# Standard version
+docker-compose up -d
+
+# With CUDA support
+ASR_FEATURES=cuda docker-compose up -d
+
+# With Metal support (MacOS)
+ASR_FEATURES=metal docker-compose up -d
+```
+
+4. Check the logs:
+```bash
+docker-compose logs -f
+```
+
+5. Stop the server:
+```bash
+docker-compose down
+```
+
+The server will be available at:
+- REST API: http://localhost:7200
+- gRPC: localhost:7300
+
+### Docker Compose Configuration
+
+The default configuration includes:
+- Automatic volume mapping for models and data persistence
+- GPU support (when using CUDA feature)
+- Optional etcd service
+- Environment variable configuration
+
+You can customize the configuration by:
+1. Modifying environment variables in docker-compose.yml
+2. Adding or removing services as needed
+3. Adjusting resource limits and port mappings
 
 ## Usage Examples
 

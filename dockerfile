@@ -9,7 +9,7 @@ RUN if [ "$(uname -m)" = "x86_64" ]; then \
         apk add --no-cache cuda-runtime-cuda cuda-cudart; \
     fi
 
-RUN apt-get update && apt-get install -y \
+RUN apk update && apk add --no-cache \
     gcc-x86-64-linux-gnu \
     g++-x86-64-linux-gnu \
     && rm -rf /var/lib/apt/lists/*

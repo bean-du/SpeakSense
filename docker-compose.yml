@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  speaksense:
+    build:
+      context: .
+      dockerfile: ${DOCKERFILE:-dockerfile.cpu}  # 默认使用 CPU 版本
+      args:
+        - FEATURES=${ASR_FEATURES:-cpu}
+    image: speaksense-asr:${PLATFORM_TAG:-latest}
+    container_name: speaksense-asr
+    restart: unless-stopped
+    ports:
+      - "7200:7200"  # REST API
+      - "7300:7300"  # gRPC
+    volumes:
+      - ./models:/app/models
+      - ./asr_data:/app/asr_data
+    environment:
+      - ASR_SQLITE_PATH=sqlite:///app/asr_data/database/storage.db?mode=rwc
+      - ASR_AUDIO_PATH=/app/asr_data/audio
+      - ASR_MODEL_PATH=/app/models/ggml-large-v3.bin
+      - RUST_LOG=info
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: ${DOCKER_RUNTIME:-none}  # 自动选择运行时
+              count: all
+              capabilities: [gpu]  # 如果使用 CUDA，启用 GPU 支持
+    runtime: ${DOCKER_RUNTIME:-runc}  # 支持老版本 Docker
+
+  # 可选: 如果需要使用 etcd
+  etcd:
+    image: bitnami/etcd:latest
+    container_name: speaksense-etcd
+    environment:
+      - ALLOW_NONE_AUTHENTICATION=yes
+      - ETCD_ADVERTISE_CLIENT_URLS=http://etcd:2379
+    ports:
+      - "2379:2379"
+    volumes:
+      - etcd_data:/bitnami/etcd
+
+volumes:
+  etcd_data:
+    driver: local 

@@ -66,7 +66,8 @@ else
 	cargo build --target $(TARGET) --release
 endif
 endif
-	# build docker image
+# build docker image
+# only support linux x86_64 now
 	docker build -f dockerfile.cuda -t $(DOCKER_IMAGE):$(VERSION) -t $(DOCKER_IMAGE):latest .
 
 # push image
