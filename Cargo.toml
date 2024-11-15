@@ -85,7 +85,7 @@ tower = "0.5.1"
 
 thiserror = "2.0.3"
 
-# 音频处理
+# audio processing
 symphonia = { version = "0.5.3", features = ["mp3", "wav", "aac", "alac", "vorbis"] }
 futures = "0.3.31"
 rand = "0.8.5"

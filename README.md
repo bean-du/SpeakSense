@@ -30,7 +30,7 @@ This project provides a server implementation for speech-to-text transcription u
 - Rust toolchain (1.70 or later)
 - For CUDA support: CUDA toolkit 11.x or later
 - For Metal support (MacOS): XCode and Metal SDK
-- etcd server running locally or accessible
+- etcd server running locally or accessible (unnecessary, only for microservice go-micro)
 
 ### Installation
 
@@ -126,7 +126,7 @@ https://huggingface.co/ggerganov/whisper.cpp/tree/main
 Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## License
-[Add your license information here]
+This project is licensed under the Apache License 2.0. See the [LICENSE](LICENSE) file for details.
 
 ## Acknowledgments
 - OpenAI Whisper
