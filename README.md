@@ -1,5 +1,7 @@
 # SpeakSense ASR Server
 
+[English](README.md) | [中文](docs/README_zh.md)
+
 A high-performance ASR (Automatic Speech Recognition) server implementation using Whisper, supporting both gRPC and REST APIs.
 
 ## Overview
@@ -65,7 +67,7 @@ cargo build --release --features metal
 
 ### Running the Server
 
-#### Standard Run
+#### Standard Run (CPU)
 ```bash
 cargo run --release
 ```
