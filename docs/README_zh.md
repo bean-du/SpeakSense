@@ -37,7 +37,7 @@
 1. 克隆仓库:
 ```bash
 git clone https://github.com/bean-du/SpeakSense
-cd whisper-asr-server
+cd SpeakSense
 ```
 
 2. 下载 Whisper 模型:
