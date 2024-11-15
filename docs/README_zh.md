@@ -36,7 +36,7 @@
 
 1. 克隆仓库:
 ```bash
-git clone https://github.com/yourusername/whisper-asr-server.git
+git clone https://github.com/bean-du/SpeakSense
 cd whisper-asr-server
 ```
 

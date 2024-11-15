@@ -38,7 +38,7 @@ This project provides a server implementation for speech-to-text transcription u
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/whisper-asr-server.git
+git clone https://github.com/bean-du/SpeakSense
 cd whisper-asr-server
 ```
 
