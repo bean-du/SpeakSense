@@ -29,5 +29,4 @@ ENV RUST_LOG=info
 USER app
 
 
-# 设置启动命令
 CMD ["/app/asr-rs"]

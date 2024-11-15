@@ -133,7 +133,8 @@ impl WhisperAsr {
         });
 
          if ap.speaker_diarization {
-            params.set_tdrz_enable(true);        // 启用说话人检测
+            // enable speaker diarization
+            params.set_tdrz_enable(true);        
         }
 
         
@@ -145,27 +146,27 @@ impl WhisperAsr {
         
         params.set_print_progress(true);
         params.set_print_realtime(true);
-        params.set_print_special(false);           // 启用特殊标记输出
-        params.set_suppress_non_speech_tokens(false);  // 不抑制非语音标记（包括标点）
-        params.set_max_initial_ts(1.0);          // 允许更多的初始时间戳
+        params.set_print_special(false);           // enable special tokens output
+        params.set_suppress_non_speech_tokens(false);  // do not suppress non-speech tokens (including punctuation)
+        params.set_max_initial_ts(1.0);          // allow more initial timestamps
         
-        params.set_no_context(false);            // 启用上下文
-        params.set_single_segment(false);        // 禁用单段模式
-        params.set_token_timestamps(true);       // 启用时间戳
-        params.set_split_on_word(true);         // 按词分割，有助��更好的标点处理
+        params.set_no_context(false);            // enable context
+        params.set_single_segment(false);        // disable single segment mode
+        params.set_token_timestamps(true);       // enable timestamps
+        params.set_split_on_word(true);         // split on word, help better punctuation
         
-        params.set_temperature(0.0);             // 使用确定性输出
-        params.set_entropy_thold(2.4);           // 设置熵阈值
-        params.set_logprob_thold(-1.0);         // 设置对数概率阈值
-        params.set_no_speech_thold(0.6);        // 设置无语音阈值
+        params.set_temperature(0.0);             // use deterministic output
+        params.set_entropy_thold(2.4);           // set entropy threshold
+        params.set_logprob_thold(-1.0);         // set log probability threshold
+        params.set_no_speech_thold(0.6);        // set no speech threshold
         
-        params.set_max_len(0);                  // 不限制段落长度
-        params.set_max_tokens(0);               // 不限制标记数量
-        params.set_speed_up(false);             // 不启用加速以保证质量
+        params.set_max_len(0);                  // no limit on segment length
+        params.set_max_tokens(0);               // no limit on token count
+        params.set_speed_up(false);             // do not enable acceleration to ensure quality
         
-        params.set_thold_pt(0.01);              // 时间戳标记概率阈值
-        params.set_thold_ptsum(0.01);           // 时间戳标记概率和阈值
-        params.set_length_penalty(-1.0);        // 长度惩罚
+        params.set_thold_pt(0.01);              // timestamp token probability threshold
+        params.set_thold_ptsum(0.01);           // timestamp token probability sum threshold
+        params.set_length_penalty(-1.0);        // length penalty
 
         params
     }

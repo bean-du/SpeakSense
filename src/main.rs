@@ -48,7 +48,8 @@ async fn main() -> Result<()> {
     let api_key = Arc::clone(&api_key_storage);
     let api_key_stats = Arc::clone(&api_key_storage);
     let auth_manager = Auth::new(api_key, api_key_stats);
-    
+    auth_manager.initialize_admin_key().await?;
+
     // Initialize task manager
     info!("Initializing Task Manager...");
     let mut task_manager = TaskManager::new(Arc::new(storage));

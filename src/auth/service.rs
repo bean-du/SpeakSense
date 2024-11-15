@@ -10,6 +10,7 @@ use std::num::NonZeroU32;
 use std::collections::HashMap;
 use tokio::sync::Mutex;
 use anyhow::Result;
+use tracing::warn;
 
 use super::error::AuthError;
 use super::stats::{ApiKeyStats, ApiKeyUsageReport, UsageSummary};
@@ -163,6 +164,39 @@ impl Auth {
                     .unwrap_or(-1),
             },
         })
+    }
+
+    /// Initialize admin API key. Only call this once when the system starts.
+    pub async fn initialize_admin_key(&self) -> Result<Option<ApiKeyInfo>> {
+        // check if admin key already exists
+        let existing_admin = self.key_storage.list().await?
+            .into_iter()
+            .find(|key| {
+                let key_info: ApiKeyInfo = key.clone().into();
+                key_info.permissions.contains(&Permission::Admin)
+            });
+
+        if existing_admin.is_some() {
+            return Ok(None);
+        }
+
+        // create new admin API key
+        let admin_key = self.create_api_key(
+            "System Administrator".to_string(),
+            vec![Permission::Admin, Permission::Transcribe, Permission::SpeakerDiarization],
+            RateLimit {
+                requests_per_minute: 100,
+                requests_per_hour: 1000,
+                requests_per_day: 10000,
+            },
+            None, // admin key never expires
+        ).await?;
+
+        // print admin key to console
+        warn!("🔐 Generated initial admin API key: {}", admin_key.key);
+        warn!("⚠️  Please save this key securely - it will not be shown again!");
+
+        Ok(Some(admin_key))
     }
 }
 
@@ -387,5 +421,21 @@ mod tests {
             auth.verify_api_key(Some(&key_info.key), Permission::Transcribe).await,
             Err(AuthError::KeySuspended)
         ));
+    }
+
+    #[tokio::test]
+    async fn test_initialize_admin_key() {
+        let auth = setup_test_auth().await;
+
+        let admin_key = auth.initialize_admin_key().await.unwrap().unwrap();
+        assert!(admin_key.permissions.contains(&Permission::Admin));
+        assert_eq!(admin_key.name, "System Administrator");
+        assert!(admin_key.expires_at.is_none());
+
+        assert!(auth.verify_api_key(Some(&admin_key.key), Permission::Admin).await.is_ok());
+        assert!(auth.verify_api_key(Some(&admin_key.key), Permission::Transcribe).await.is_ok());
+        assert!(auth.verify_api_key(Some(&admin_key.key), Permission::SpeakerDiarization).await.is_ok());
+
+        assert!(auth.initialize_admin_key().await.unwrap().is_none());
     }
 } 

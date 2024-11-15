@@ -4,10 +4,10 @@ services:
   speaksense:
     build:
       context: .
-      dockerfile: ${DOCKERFILE:-dockerfile.cpu}  # 默认使用 CPU 版本
+      dockerfile: dockerfile.cuda
       args:
-        - FEATURES=${ASR_FEATURES:-cpu}
-    image: speaksense-asr:${PLATFORM_TAG:-latest}
+        - FEATURES=cuda
+    image: speaksense:cuda
     container_name: speaksense-asr
     restart: unless-stopped
     ports:
@@ -25,12 +25,12 @@ services:
       resources:
         reservations:
           devices:
-            - driver: ${DOCKER_RUNTIME:-none}  # 自动选择运行时
+            - driver: nvidia
               count: all
-              capabilities: [gpu]  # 如果使用 CUDA，启用 GPU 支持
-    runtime: ${DOCKER_RUNTIME:-runc}  # 支持老版本 Docker
+              capabilities: [gpu]  
+    runtime: nvidia
 
-  # 可选: 如果需要使用 etcd
+  # optional: if using etcd
   etcd:
     image: bitnami/etcd:latest
     container_name: speaksense-etcd
