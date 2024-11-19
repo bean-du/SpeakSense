@@ -34,4 +34,11 @@ message TranscribeResponse {
   int32 end = 1;
   bytes text = 2;
   string device_id = 3;
+  repeated Segment segments = 4;
+}
+
+message Segment {
+  int64 start = 1;
+  int64 end = 2;
+  bytes text = 3;
 }

@@ -27,14 +27,14 @@ struct Args {
 }
 
 async fn convert_and_send_audio(args: Args) -> Result<()> {
-    // 读取输入WAV文件
+    // read input WAV file
     let mut reader = WavReader::open(&args.input)
         .context("Failed to open input file")?;
     let spec = reader.spec();
 
     println!("Input audio spec: {:?}", spec);
 
-    // 读取所有采样点
+    // read all samples
     let samples: Vec<f32> = match spec.sample_format {
         SampleFormat::Float => reader.samples::<f32>()
             .collect::<Result<Vec<f32>, _>>()?,
@@ -43,10 +43,10 @@ async fn convert_and_send_audio(args: Args) -> Result<()> {
             .collect::<Result<Vec<f32>, _>>()?,
     };
 
-    // 保存原始样本数量用于统计
+    // save original sample count for statistics
     let original_sample_count = samples.len();
 
-    // 如果是立体声，转换为单声道
+    // if stereo, convert to mono
     let mono_samples = if spec.channels == 2 {
         println!("Converting stereo to mono...");
         let mut mono = Vec::with_capacity(samples.len() / 2);
@@ -58,10 +58,10 @@ async fn convert_and_send_audio(args: Args) -> Result<()> {
         samples
     };
 
-    // 保存单声道样本数量用于统计
+    // save mono sample count for statistics
     let mono_sample_count = mono_samples.len();
 
-    // 重采样到16kHz
+    // resample to 16kHz
     let output_samples = if spec.sample_rate != 16000 {
         println!("Resampling from {}Hz to 16000Hz...", spec.sample_rate);
         let params = SincInterpolationParameters {
@@ -89,7 +89,7 @@ async fn convert_and_send_audio(args: Args) -> Result<()> {
         mono_samples
     };
 
-    // 转换为16bit PCM
+    // convert to 16bit PCM
     let pcm_data: Vec<u8> = output_samples.iter()
         .flat_map(|&sample| {
             let clamped = sample.max(-1.0).min(1.0);
@@ -100,7 +100,6 @@ async fn convert_and_send_audio(args: Args) -> Result<()> {
 
     println!("Audio conversion completed. Connecting to ASR server...");
 
-    // 添加音频统计信息
     println!("\nAudio statistics:");
     println!("Original sample rate: {} Hz", spec.sample_rate);
     println!("Original channels: {}", spec.channels);
@@ -110,7 +109,6 @@ async fn convert_and_send_audio(args: Args) -> Result<()> {
     println!("Resampled sample count: {}", output_samples.len());
     println!("PCM data size: {} bytes", pcm_data.len());
     
-    // 检查音频振幅
     let max_amplitude = output_samples.iter().fold(0f32, |a, &b| a.max(b.abs()));
     println!("Max amplitude: {}", max_amplitude);
     if max_amplitude > 1.0 {
@@ -119,14 +117,12 @@ async fn convert_and_send_audio(args: Args) -> Result<()> {
         println!("Warning: Audio may be too quiet!");
     }
 
-    // 检查音频时长
     let duration = output_samples.len() as f32 / 16000.0;
     println!("Audio duration: {:.2} seconds", duration);
     if duration < 0.5 {
         println!("Warning: Audio may be too short!");
     }
 
-    // 检查PCM数据
     let non_zero_samples = pcm_data.chunks(2)
         .filter(|chunk| {
             if chunk.len() == 2 {
@@ -143,12 +139,10 @@ async fn convert_and_send_audio(args: Args) -> Result<()> {
         (non_zero_samples as f32 / (pcm_data.len() / 2) as f32) * 100.0
     );
 
-    // 检查每个块的大小
     for (i, chunk) in pcm_data.chunks(32 * 1024).enumerate() {
         println!("Chunk {}: {} bytes", i, chunk.len());
     }
 
-    // 在发送之前检查 PCM 数据
     let non_zero_count = pcm_data.chunks(2)
         .filter(|chunk| {
             if chunk.len() == 2 {
@@ -162,7 +156,6 @@ async fn convert_and_send_audio(args: Args) -> Result<()> {
 
     println!("Client side - Non-zero samples: {}/{}", non_zero_count, pcm_data.len() / 2);
 
-    // 检查一些样本值
     for (i, chunk) in pcm_data.chunks(2).take(10).enumerate() {
         if chunk.len() == 2 {
             let sample = i16::from_le_bytes([chunk[0], chunk[1]]);
@@ -170,10 +163,8 @@ async fn convert_and_send_audio(args: Args) -> Result<()> {
         }
     }
 
-    // 连接到服务器
     let mut client = AsrClient::connect(args.server).await?;
 
-    // 创建请求数据
     let device_id = args.device_id;
     let chunks: Vec<_> = pcm_data.chunks(32 * 1024)
         .enumerate()
@@ -188,28 +179,34 @@ async fn convert_and_send_audio(args: Args) -> Result<()> {
         })
         .collect();
 
-    // 创建请求流
+    // create request stream
     let outbound = stream::iter(chunks);
 
-    // 发送请求并获取响应流
-    println!("\n开始识别...");
+    println!("\nStart transcribing...");
     let request = Request::new(outbound);
     let response = client.transcribe(request).await?;
     let mut inbound = response.into_inner();
 
-    // 使用新的流式处理逻辑处理响应
-    println!("正在接收识别结果...");
+    println!("Receiving recognition results...");
     
-    // 使用 while let Some 来处理流式响应
+    // process stream response
     while let Some(response) = inbound.message().await? {
         let text = String::from_utf8_lossy(&response.text);
         if !text.trim().is_empty() {
-            print!("\r"); // 清除当前行
-            println!("实时识别: {}", text.trim());
+            print!("\r"); 
+            // print segments info
+            for segment in &response.segments {
+                let segment_text = String::from_utf8_lossy(&segment.text);
+                println!("  Segment: {} -> {} Text: {}", 
+                    format_timestamp(segment.start),
+                    format_timestamp(segment.end),
+                    segment_text.trim()
+                );
+            }
         }
         
         if response.end == 1 {
-            println!("\n识别完成!");
+            println!("\nRecognition completed!");
             break;
         }
     }
@@ -221,4 +218,10 @@ async fn convert_and_send_audio(args: Args) -> Result<()> {
 async fn main() -> Result<()> {
     let args = Args::parse();
     convert_and_send_audio(args).await
+}
+
+// format timestamp
+fn format_timestamp(ms: i64) -> String {
+    let seconds = ms as f64 / 1000.0; 
+    format!("{:.2}ms", seconds)
 } 

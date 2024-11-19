@@ -52,7 +52,6 @@ impl WhisperAsr {
             .map_err(|e| anyhow::anyhow!("Failed to lock state: {}", e))?;
         
         let state = state_guard.as_mut();
-        
         debug!("Starting transcription with audio length: {}", audio.len());
         debug!("Audio data checksum: {:x}", calculate_checksum(&audio));
         
@@ -64,10 +63,13 @@ impl WhisperAsr {
         }
 
         if user_params.stream_mode {
-            params.set_single_segment(true);
+            params.set_single_segment(false);
             params.set_no_context(true);
             params.set_audio_ctx(0);
         }
+
+        params.set_split_on_word(true);
+
 
         debug!("Running full inference");
         state.full(params, &audio)?;
@@ -140,18 +142,17 @@ impl WhisperAsr {
         
         params.set_n_threads(16);
         params.set_audio_ctx(1500);
+        params.set_print_realtime(true);
         params.set_print_timestamps(true);
 
         params.set_single_segment(false);
         
         params.set_print_progress(true);
-        params.set_print_realtime(true);
         params.set_print_special(false);           // enable special tokens output
         params.set_suppress_non_speech_tokens(false);  // do not suppress non-speech tokens (including punctuation)
         params.set_max_initial_ts(1.0);          // allow more initial timestamps
         
         params.set_no_context(false);            // enable context
-        params.set_single_segment(false);        // disable single segment mode
         params.set_token_timestamps(true);       // enable timestamps
         params.set_split_on_word(true);         // split on word, help better punctuation
         

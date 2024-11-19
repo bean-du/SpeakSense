@@ -22,6 +22,17 @@ pub struct TranscribeResponse {
     pub text: ::prost::alloc::vec::Vec<u8>,
     #[prost(string, tag = "3")]
     pub device_id: ::prost::alloc::string::String,
+    #[prost(message, repeated, tag = "4")]
+    pub segments: ::prost::alloc::vec::Vec<Segment>,
+}
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct Segment {
+    #[prost(int64, tag = "1")]
+    pub start: i64,
+    #[prost(int64, tag = "2")]
+    pub end: i64,
+    #[prost(bytes = "vec", tag = "3")]
+    pub text: ::prost::alloc::vec::Vec<u8>,
 }
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
 #[repr(i32)]

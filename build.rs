@@ -34,23 +34,30 @@ fn main() {
         .compile_protos(&["proto/asr.proto"], &["proto"])
         .unwrap_or_else(|e| panic!("Failed to compile protos: {}", e));
 
-    // if need to generate to specific directory (optional)
+    // 清理旧的生成文件，但保留 mod.rs
     let pb_dir = PathBuf::from("src/grpc/pb");
-    if !pb_dir.exists() {
+    if pb_dir.exists() {
+        // 删除特定的生成文件，保留 mod.rs
+        for entry in std::fs::read_dir(&pb_dir).unwrap() {
+            let entry = entry.unwrap();
+            let path = entry.path();
+            if path.is_file() && path.file_name().unwrap() != "mod.rs" {
+                std::fs::remove_file(path).unwrap();
+            }
+        }
+    } else {
         std::fs::create_dir_all(&pb_dir).unwrap();
     }
     
-    // configure compile to specific directory
+    // 配置编译到特定目录
     tonic_build::configure()
-        .out_dir(pb_dir)
-        // add properties to server code
+        .out_dir(&pb_dir)
         .server_mod_attribute("asr", "#[cfg(feature = \"server\")]")
-        // add properties to client code
         .client_mod_attribute("asr", "#[cfg(feature = \"client\")]")
         .compile_protos(&["proto/asr.proto"], &["proto"])
         .unwrap_or_else(|e| panic!("Failed to compile protos to specific dir: {}", e));
 
-    // notify Cargo to rerun if source files change
+    // 通知 Cargo 在源文件改变时重新运行
     println!("cargo:rerun-if-changed=proto/asr.proto");
     println!("cargo:rerun-if-changed=build.rs");
 }
